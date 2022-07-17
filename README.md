@@ -23,7 +23,7 @@
 
 > No "official" API access required - just use a valid Linkedin account!
 
-Programmatically send messages, get jobs, search profiles and more, all with a regular Linkedin user account!
+Programmatically send messages, get jobs, search profiles and more. All with a regular Linkedin user account!
 
 Before using this project, please consult the [Terms and Conditions](#terms-and-conditions) and [Legal Notice](#legal).
 
@@ -31,21 +31,17 @@ Before using this project, please consult the [Terms and Conditions](#terms-and-
 
 > ⚠️ Python >= 3.6 required
 
-To install the package with the latest changes in this repo
+```bash
+pip3 install linkedin-api
+```
+
+Want the latest, pre-release version? Use the following command:
 
 ```bash
 pip3 install git+https://github.com/tomquirk/linkedin-api.git
 ```
 
-To install PyPI version:
-
-```bash
-pip3 install linkedin-api~=2.0.0a
-```
-
-> [Why v2.0.0a?](#versioning-note)
-
-### Example usage
+### Usage
 
 ```python
 from linkedin_api import Linkedin
@@ -69,13 +65,19 @@ For a complete reference documentation, see the [documentation website](https://
 
 ## Overview
 
-This project attempts to provide a simple Python interface for the Linkedin API.
+This project attempts to provide a Python interface for the Linkedin API.
 
-> Do you mean the [legit Linkedin API](https://developer.linkedin.com/)?
+"You mean the [real Linkedin API](https://developer.linkedin.com/)?"
 
-NO! To retrieve structured data, the [Linkedin Website](https://linkedin.com) uses a service they call **Voyager**. Voyager endpoints give us access to pretty much everything we could want from Linkedin: profiles, companies, connections, messages, etc. - anything that you can see on linkedin.com, we can get from Voyager.
+No! To retrieve structured data, the [Linkedin Website](https://linkedin.com) uses a service they call **Voyager**. Voyager endpoints give us access to pretty much everything we could want from LinkedIn:
+- profiles
+- companies
+- connections
+- messages (and more!)
 
-So specifically, this project aims to provide complete coverage for Voyager.
+Anything that you can see on linkedin.com, we can get from Voyager.
+
+This project aims to provide complete coverage of Voyager.
 
 [How do we do it?](#in-depth-overview)
 
@@ -88,25 +90,26 @@ So specifically, this project aims to provide complete coverage for Voyager.
 ### Dependencies
 
 - Python 3.7
-- A valid Linkedin user account (don't use your personal account, if possible)
-- `pipenv` (optional)
+- A valid Linkedin user account.
+  - Using your personal account isn't recommended.
+- `pipenv` (optional).
 
 ### Development installation
 
-1. Create a `.env` config file. An example is provided in `.env.example` - you include at least all of the settings set there.
-2. Using pipenv...
+1. Create a `.env` config file. Use the `.env.example` file as reference.
+2. Create a virtual environment with Pipenv.
 
-   ```bash
-   pipenv install --dev
-   pipenv shell
-   ```
-
+     ```bash
+     pipenv install --dev
+     pipenv shell
+     ```
 ### Running tests
+
+Run the test suite with the following command:
 
 ```bash
 python -m pytest tests
 ```
-
 ### Troubleshooting
 
 #### I keep getting a `CHALLENGE`
@@ -126,47 +129,41 @@ Please add more as you come across them.
 
 ## In-depth overview
 
-Voyager endpoints look like this:
-
-```text
-https://www.linkedin.com/voyager/api/identity/profileView/tom-quirk
-```
-
-Or, more clearly
+Voyager endpoints (URLs) take the following form:
 
 ```text
  ___________________________________ _______________________________
 |             base path             |            resource           |
-https://www.linkedin.com/voyager/api /identity/profileView/tom-quirk
+https://www.linkedin.com/voyager/api/identity/profileView/tom-quirk
 ```
 
-They are authenticated with a simple cookie, which we send with every request, along with a bunch of headers.
+Requests to Voyager endpoints are authenticated with a simple cookie. We send a cookie with every request, along with a bunch of headers.
 
-To get a cookie, we POST a given username and password (of a valid Linkedin user account) to `https://www.linkedin.com/uas/authenticate`.
+To get a cookie, we `POST` a given valid LinkedIn username and password to `https://www.linkedin.com/uas/authenticate`.
 
 ### To find endpoints
 
-We're looking at the Linkedin website and we spot some data we want. What now?
+You're looking at the Linkedin website and you spot some data you want to capture. What now?
 
-The most reliable method to find the relevant endpoint is to:
+Use the following method to find the associated Voyager endpoint:
 
 1. `view source`
 2. `command-f`/search the page for some keyword in the data. This will exist inside of a `<code>` tag.
 3. Scroll down to the **next adjacent element** which will be another `<code>` tag, probably with an `id` that looks something like
 
-   ```html
-   <code style="display: none" id="datalet-bpr-guid-3900675">
-     {"request":"/voyager/api/identity/profiles/tom-quirk/profileView","status":200,"body":"bpr-guid-3900675"}
-   </code>
-   ```
+ ```html
+ <code style="display: none" id="datalet-bpr-guid-3900675">
+  {"request":"/voyager/api/identity/profiles/tom-quirk/profileView","status":200,"body":"bpr-guid-3900675"}
+ </code>
+ ```
 
 4. The value of `request` is the url! 🤘
 
-You can also use the `network` tab in you browsers developer tools, but you will encounter mixed results.
+You can also use the `network` tab in you browsers developer tools, but you will have mixed results.
 
 ### How Clients query Voyager
 
-linkedin.com queries data using the [Rest-li Protocol](https://linkedin.github.io/rest.li/spec/protocol). Rest-li is an internal query language/syntax where clients (like linkedin.com) to specify what data they want (similar to the GraphQL concept).
+The LinkedIn website queries data using the [Rest-li Protocol](https://linkedin.github.io/rest.li/spec/protocol). Rest-li is an query language developed by LinkedIn.  Clients (like linkedin.com) use Rest-li to query what data they want (similar to GraphQL).
 
 Here's an example of making a request for an organisation's `name` and `groups` (the Linkedin groups it manages):
 
@@ -174,7 +171,7 @@ Here's an example of making a request for an organisation's `name` and `groups` 
 /voyager/api/organization/companies?decoration=(name,groups*~(entityUrn,largeLogo,groupName,memberCount,websiteUrl,url))&q=universalName&universalName=linkedin
 ```
 
-The "querying" happens in the `decoration` parameter, which looks like
+The "querying" happens in the `decoration` parameter, which looks like this:
 
 ```text
 (
@@ -183,7 +180,7 @@ The "querying" happens in the `decoration` parameter, which looks like
 )
 ```
 
-So here, we request an organisation name, and a list of groups, where for each group we want `largeLogo`, `groupName`, etc.
+Here, we request an organisation name, and a list of groups, where for each group we want `largeLogo`, `groupName`, etc.
 
 Different endpoints use different parameters (and perhaps even different syntaxes) to specify these queries. Notice that the above query had a parameter `q` whose value was `universalName`; the query was then specified with the `decoration` parameter.
 
@@ -197,9 +194,7 @@ It could be possible to document (and implement a nice interface for) this query
 
 ## Terms and Conditions
 
-By using this project, you agree to the following Terms and Conditions. We reserve the right to block any user of this repository that does not meet these conditions.
-
-### Usage
+By using this project, you agree to the following Terms and Conditions.
 
 This project may not be used for any of the following:
 
@@ -213,10 +208,3 @@ This project may not be used for any of the following:
 This code is in no way affiliated with, authorized, maintained, sponsored or endorsed by Linkedin or any of its affiliates or subsidiaries. This is an independent and unofficial API. Use at your own risk.
 
 This project violates Linkedin's User Agreement Section 8.2, and because of this, Linkedin may (and will) temporarily or permanently ban your account. We are not responsible for your account being banned.
-
-## Versioning Note
-
-**Tl;dr:** Don't use anything < v2.0.0a.
-
-Releases/tags for this package have not been kept up to date with changes and thus versions (like v1.0.0) are misleading and do not represent "stability".
-Eventually, v2.0.0 will be the "stable" release.
